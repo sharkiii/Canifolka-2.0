@@ -276,7 +276,7 @@ namespace Canifolka_2._0
 
         }
 
-        private void PollLeftAndRightThumbs()
+        private void PollLeftAndRightTriggers()
         { 
             //Обработка притармаживания RT и LT
         
