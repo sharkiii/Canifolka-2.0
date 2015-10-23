@@ -30,6 +30,10 @@ namespace Canifolka_2._0
         // Диапазон джойстика
         private  const int TopStickLimit = 100;
         private  const int BottomStickLimit = -100;
+
+        //Диапазон LeftTrigger и RightTrigger
+        private const int MinTriggerValue = 0;
+        private const int MaxTriggerValue = 255;
         #endregion
 
         #region PropertiesInt
@@ -48,20 +52,12 @@ namespace Canifolka_2._0
             {
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
             }
-            set 
-            { 
-                
-            }
         }
         public bool ButtonY 
         { 
             get 
             {
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.Y);
-            }
-            set
-            { 
-            
             }
         }
         public bool ButtonX 
@@ -70,18 +66,12 @@ namespace Canifolka_2._0
             {
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.X);
             }
-            set
-            { 
-            }
         }
         public bool ButtonB 
         {
             get
             {
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
-            }
-            set
-            { 
             }
         }
         public bool LeftThumb 
@@ -95,10 +85,6 @@ namespace Canifolka_2._0
             get
             {
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.RightThumb);
-            }
-            set 
-            { 
-            
             }
         }
         public bool ButtonStart 
@@ -173,6 +159,8 @@ namespace Canifolka_2._0
         }
         #endregion
 
+        public int newMaxRightTrigger = 0;
+        public int newMaxLeftTrigger = 0;
         public event EventHandler IsConnectedChanged;
         private bool _isConnected;
         private Controller _controller;
@@ -182,18 +170,23 @@ namespace Canifolka_2._0
         public Joystick()
         {
            _controller = new Controller(UserIndex.One);
-           Thread ConnectionThread = new Thread(CheckConnection){IsBackground = true};
+           Thread ConnectionThread = new Thread(CheckConnectionAndPolling){IsBackground = true};
            ConnectionThread.Start();
         }
 
         // Метод, который вызывается в потоке и служит для обработки джойстика и 
         // проверки его подключения
-        private void CheckConnection()
+        private void CheckConnectionAndPolling()
         { 
             while(true)
             {
                 IsConnected = _controller.IsConnected;
-                if (_isConnected) PollJoystick();
+                if (_isConnected)
+                {
+                    _gamepad = _controller.GetState().Gamepad;
+                    PollJoystick();
+                    PollLeftAndRightTriggers(newMaxRightTrigger, newMaxLeftTrigger);
+                }
                 Thread.Sleep(50);
             }
 
@@ -207,8 +200,6 @@ namespace Canifolka_2._0
         // Обработка джойстика
         private void PollJoystick()
         {
-            _gamepad = _controller.GetState().Gamepad;
-
             //Левый джойстик обработка
             if (_gamepad.LeftThumbY > DeathZoneLeftStickTop)
             {
@@ -276,10 +267,13 @@ namespace Canifolka_2._0
 
         }
 
-        private void PollLeftAndRightTriggers()
-        { 
-            //Обработка притармаживания RT и LT
-        
+        private void PollLeftAndRightTriggers(int newMaxRight, int newMaxLeft)
+        {
+            RightTrigger = Map(_gamepad.RightTrigger, MinTriggerValue, MaxTriggerValue,
+                MinTriggerValue, newMaxRight);
+
+            LeftTrigger = Map(_gamepad.LeftTrigger, MinTriggerValue, MaxTriggerValue,
+                MinTriggerValue, newMaxLeft);
         }
     }
 }

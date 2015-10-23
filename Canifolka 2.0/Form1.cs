@@ -14,6 +14,7 @@ namespace Canifolka_2._0
     public partial class Form1 : Form
     {
         Joystick joystick = new Joystick();
+        Robot robotspeed = new Robot();
         public Form1()
         {
             InitializeComponent();
@@ -51,8 +52,9 @@ namespace Canifolka_2._0
             {
                 Action action = () =>
                 {
-                    label_leftY.Text = joystick.LeftY.ToString();
-                    labelRightX.Text = joystick.RightX.ToString();
+                    robotspeed.SetSpeedForTransmittion();
+                    label_leftY.Text = robotspeed.SpeedLeftSideForTransmittion.ToString();
+                    labelRightX.Text = robotspeed.SpeedRightSideForTransmittion.ToString();
                     Thread.Sleep(50);
                 };
                 if (InvokeRequired)

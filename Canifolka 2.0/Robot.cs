@@ -55,8 +55,13 @@ namespace Canifolka_2._0
             _speedRightSide = _joystick.LeftY - _joystick.RightX;
 
             _speedLeftSide = Maximum(MinSpeed, Minimum(MaxSpeed, _speedLeftSide));
-
             _speedRightSide = Maximum(MinSpeed, Minimum(MaxSpeed, _speedRightSide));
+
+            _joystick.newMaxRightTrigger = _speedRightSide;
+            _joystick.newMaxLeftTrigger = _speedLeftSide;
+
+            _speedRightSide = _speedRightSide - _joystick.RightTrigger;
+            _speedLeftSide = _speedLeftSide - _joystick.LeftTrigger;
 
             if (!_joystick.IsConnected)
             {
