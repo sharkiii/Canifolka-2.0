@@ -104,7 +104,9 @@ namespace Canifolka_2._0
         { 
             while (true)
             {
-                transmitData(0x01,0x00,0x00);
+                _robotSpeed.SetSpeedForTransmittion();
+                transmitData(0x01,_robotSpeed.SpeedRightSideForTransmittion,
+                    _robotSpeed.SpeedLeftSideForTransmittion);
                 Thread.Sleep(100);
             }
         }

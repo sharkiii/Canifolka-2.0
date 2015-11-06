@@ -15,8 +15,8 @@ namespace Canifolka_2._0
         private int _speedLeftSide;
 
         // Скорость для передачи
-        public int SpeedRightSideForTransmittion { get; set; }
-        public int SpeedLeftSideForTransmittion { get; set; }
+        public byte SpeedRightSideForTransmittion { get; set; }
+        public byte SpeedLeftSideForTransmittion { get; set; }
 
         private Joystick _joystick;
         public Robot()
@@ -74,8 +74,11 @@ namespace Canifolka_2._0
         public void SetSpeedForTransmittion()
         {
             SetSpeed();
-            SpeedLeftSideForTransmittion = _speedLeftSide + 100;
-            SpeedRightSideForTransmittion = _speedRightSide + 100;
+            _speedLeftSide = _speedLeftSide + 100;
+            _speedRightSide = _speedRightSide + 100;
+
+            SpeedLeftSideForTransmittion =  Convert.ToByte(_speedLeftSide);
+            SpeedRightSideForTransmittion = Convert.ToByte(_speedRightSide);
         }
 
     }

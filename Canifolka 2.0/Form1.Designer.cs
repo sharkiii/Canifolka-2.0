@@ -28,8 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label_leftY = new System.Windows.Forms.Label();
-            this.labelRightX = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.comboBoxPorts = new System.Windows.Forms.ComboBox();
@@ -37,24 +35,6 @@
             this.checkBoxStick = new System.Windows.Forms.CheckBox();
             this.checkBoxRobot = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
-            // 
-            // label_leftY
-            // 
-            this.label_leftY.AutoSize = true;
-            this.label_leftY.Location = new System.Drawing.Point(107, 109);
-            this.label_leftY.Name = "label_leftY";
-            this.label_leftY.Size = new System.Drawing.Size(67, 13);
-            this.label_leftY.TabIndex = 1;
-            this.label_leftY.Text = "Левый стик";
-            // 
-            // labelRightX
-            // 
-            this.labelRightX.AutoSize = true;
-            this.labelRightX.Location = new System.Drawing.Point(107, 142);
-            this.labelRightX.Name = "labelRightX";
-            this.labelRightX.Size = new System.Drawing.Size(73, 13);
-            this.labelRightX.TabIndex = 2;
-            this.labelRightX.Text = "Правый стик";
             // 
             // label2
             // 
@@ -125,8 +105,6 @@
             this.Controls.Add(this.comboBoxPorts);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.labelRightX);
-            this.Controls.Add(this.label_leftY);
             this.Name = "Form1";
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -138,8 +116,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label_leftY;
-        private System.Windows.Forms.Label labelRightX;
         private System.Windows.Forms.Button button1;
         public System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboBoxPorts;

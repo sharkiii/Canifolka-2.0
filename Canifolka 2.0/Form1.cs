@@ -16,7 +16,6 @@ namespace Canifolka_2._0
         Joystick joystick = new Joystick();
         Robot robotspeed = new Robot();
         Enotik enot;
-        Thread dataFromJoystick;
         public Form1()
         {
             InitializeComponent();
@@ -24,8 +23,6 @@ namespace Canifolka_2._0
             else checkBoxStick.Checked = false;
 
             joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
-            dataFromJoystick = new Thread(JoyState) { IsBackground = true};
-            dataFromJoystick.Start();
         }
         private void OnIsConnectChange(object sender, EventArgs e)
         {
@@ -53,27 +50,6 @@ namespace Canifolka_2._0
             comboBoxPorts.Items.AddRange(myPorts);
         }
 
-        private void JoyState()
-        {
-            Action action = () =>
-            {
-                robotspeed.SetSpeedForTransmittion();
-                label_leftY.Text = robotspeed.SpeedLeftSideForTransmittion.ToString();
-                labelRightX.Text = robotspeed.SpeedRightSideForTransmittion.ToString();                
-            };
-
-            while (true)
-            {
-                
-                if (InvokeRequired)
-                {
-                   Invoke(action);
-                }
-                else { action(); }
-                Thread.Sleep(100);
-            }
-        }
-
         private void button1_Click(object sender, EventArgs e)
         {
             if (button1.Text == "ON")
@@ -90,8 +66,7 @@ namespace Canifolka_2._0
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-           dataFromJoystick.Abort();
-           
+          
         }
 
         private void comboBoxPorts_SelectedIndexChanged(object sender, EventArgs e)
