@@ -15,13 +15,15 @@ namespace Canifolka_2._0
     {
         Joystick joystick = new Joystick();
         Robot robotspeed = new Robot();
+        Enotik enot;
+        Thread dataFromJoystick;
         public Form1()
         {
             InitializeComponent();
             if (joystick.IsConnected) label1.Text = "Джойстик подключен";
             else label1.Text = "Джойстик отключен";
             joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
-            Thread dataFromJoystick = new Thread(JoyState) { IsBackground = true};
+            dataFromJoystick = new Thread(JoyState) { IsBackground = true};
             dataFromJoystick.Start();
         }
         private void OnIsConnectChange(object sender, EventArgs e)
@@ -41,29 +43,41 @@ namespace Canifolka_2._0
             }
             else { action(); }
         }
+
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            enot = new Enotik();
         }
 
         private void JoyState()
         {
+            Action action = () =>
+            {
+                robotspeed.SetSpeedForTransmittion();
+                label_leftY.Text = robotspeed.SpeedLeftSideForTransmittion.ToString();
+                labelRightX.Text = robotspeed.SpeedRightSideForTransmittion.ToString();                
+            };
+
             while (true)
             {
-                Action action = () =>
-                {
-                    robotspeed.SetSpeedForTransmittion();
-                    label_leftY.Text = robotspeed.SpeedLeftSideForTransmittion.ToString();
-                    labelRightX.Text = robotspeed.SpeedRightSideForTransmittion.ToString();
-                    Thread.Sleep(50);
-                };
+                
                 if (InvokeRequired)
                 {
-                    Invoke(action);
-
+                   Invoke(action);
                 }
                 else { action(); }
+                Thread.Sleep(100);
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            enot.transmitData(0x02, 0x00, 0x00);
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+           dataFromJoystick.Abort();
         }
     }
 }

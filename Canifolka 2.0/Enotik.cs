@@ -3,23 +3,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.IO.Ports;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace Canifolka_2._0
 {
     class Enotik
     {
         private Robot _robotSpeed;
-        private Form1 form1;
-        private byte[] buffer;
-        private const byte ID = 0x81;
+        private SerialPort COMPortRobot;
+        private const byte ID = 0x01;
         private const int bytesCount = 5;
         public Enotik()
         {
             _robotSpeed = new Robot();
+            COMPortRobot = new SerialPort();
+            initComPort();
+            Thread checkRobotConnection = new Thread(checkedConection) { IsBackground = true};
+            checkRobotConnection.Start();
+            COMPortRobot.DataReceived += new SerialDataReceivedEventHandler(COMPortRobot_DataReceived);
         }
-
-        private const byte[] crc8Table = {
-
+        private void initComPort()
+        {
+            COMPortRobot.BaudRate = 9600;
+        }
+        private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        { 
+            
+        
+        }
+        
+       
+        private static readonly byte[] crc8Table = new byte[]{
             0x00, 0x31, 0x62, 0x53, 0xC4, 0xF5, 0xA6, 0x97,
             0xB9, 0x88, 0xDB, 0xEA, 0x7D, 0x4C, 0x1F, 0x2E,
             0x43, 0x72, 0x21, 0x10, 0x87, 0xB6, 0xE5, 0xD4,
@@ -54,6 +71,31 @@ namespace Canifolka_2._0
             0x3B, 0x0A, 0x59, 0x68, 0xFF, 0xCE, 0x9D, 0xAC
         };
 
+        
+        private void checkedConection()
+        { 
+            //COMPortRobot.Open();
+            while (true)
+            {
+                if (COMPortRobot.IsOpen)
+                {
+                    transmitData(0x01, 0x00, 0x00);
+                }
+                else
+                {
+                    try
+                    {
+                        COMPortRobot.Open();
+                    }
+                    catch (IOException)
+                    {
+                        Program.form1.Invoke((Action)(()=>MessageBox.Show("123")));
+                    }
+                    
+                }
+                Thread.Sleep(100);
+            }
+        }
         private byte CRC8(byte[] bytes, int len)
         {
             byte crc = 0;
@@ -64,19 +106,21 @@ namespace Canifolka_2._0
 
         public void transmitData(byte oppset, byte one, byte two)
         {
-            makeBuffer(oppset, one, two);
-            if (form1.COMPortRobot.IsOpen)
+            
+
+            if (COMPortRobot.IsOpen)
             {
-                form1.COMPortRobot.Write(buffer, 0, bytesCount);
+                COMPortRobot.Write(makeBuffer(oppset, one, two), 0, bytesCount);
             }
+
         }
 
-        private void makeBuffer(byte oppset, byte one, byte two)
+        private byte[] makeBuffer(byte oppset, byte one, byte two)
         {
             // Пример: ID,OPPSET,ONE,TWO,CRC8
             byte[] toCRC8 = { ID, oppset, one, two };
             byte [] buf = {ID ,oppset, one, two, CRC8(toCRC8, toCRC8.Length)};
-            buffer = buf;
+            return buf;
             
 
         }
