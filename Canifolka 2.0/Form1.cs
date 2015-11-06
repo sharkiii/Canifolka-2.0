@@ -47,6 +47,9 @@ namespace Canifolka_2._0
         private void Form1_Load(object sender, EventArgs e)
         {
             enot = new Enotik();
+            string[] myPorts;
+            myPorts = System.IO.Ports.SerialPort.GetPortNames();
+            comboBoxPorts.Items.AddRange(myPorts);
         }
 
         private void JoyState()
@@ -78,6 +81,24 @@ namespace Canifolka_2._0
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
            dataFromJoystick.Abort();
+        }
+
+        private void comboBoxPorts_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnPortOK_Click(object sender, EventArgs e)
+        {
+            if (comboBoxPorts.SelectedItem != null)
+            {
+                enot.initComPortAndThread(comboBoxPorts.SelectedItem.ToString());
+                comboBoxPorts.Enabled = false;
+            }
+            else 
+            {
+                MessageBox.Show("Вы не выбрали порт","Ошибка",MessageBoxButtons.OK);
+            }
         }
     }
 }

@@ -15,19 +15,20 @@ namespace Canifolka_2._0
         private Robot _robotSpeed;
         private SerialPort COMPortRobot;
         private const byte ID = 0x01;
-        private const int bytesCount = 5;
+        private const int BaudRate = 9600;
         public Enotik()
         {
             _robotSpeed = new Robot();
             COMPortRobot = new SerialPort();
-            initComPort();
-            Thread checkRobotConnection = new Thread(checkedConection) { IsBackground = true};
+        }
+        public void initComPortAndThread(string portName)
+        {
+            COMPortRobot.BaudRate = BaudRate;
+            COMPortRobot.PortName = portName;
+            COMPortRobot.Open();
+            Thread checkRobotConnection = new Thread(checkedConection) { IsBackground = true };
             checkRobotConnection.Start();
             COMPortRobot.DataReceived += new SerialDataReceivedEventHandler(COMPortRobot_DataReceived);
-        }
-        private void initComPort()
-        {
-            COMPortRobot.BaudRate = 9600;
         }
         private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
         { 
@@ -71,55 +72,35 @@ namespace Canifolka_2._0
             0x3B, 0x0A, 0x59, 0x68, 0xFF, 0xCE, 0x9D, 0xAC
         };
 
-        
+        // Постоянно посылаем контроллеру состояние джойстиков и + узнаем есть связь с ним вообще или нет
         private void checkedConection()
         { 
-            //COMPortRobot.Open();
             while (true)
             {
-                if (COMPortRobot.IsOpen)
-                {
-                    transmitData(0x01, 0x00, 0x00);
-                }
-                else
-                {
-                    try
-                    {
-                        COMPortRobot.Open();
-                    }
-                    catch (IOException)
-                    {
-                        Program.form1.Invoke((Action)(()=>MessageBox.Show("123")));
-                    }
-                    
-                }
+                transmitData(0x02,0x00,0x00);
                 Thread.Sleep(100);
             }
         }
+
+        // Считаем CRC8
         private byte CRC8(byte[] bytes, int len)
         {
-            byte crc = 0;
+            byte crc = 0xFF;
             for (var i = 0; i < len; i++)
                 crc = crc8Table[crc ^ bytes[i]];
             return crc;
         }
 
-        public void transmitData(byte oppset, byte one, byte two)
+        public void transmitData(byte oppcode, byte one, byte two)
         {
-            
-
-            if (COMPortRobot.IsOpen)
-            {
-                COMPortRobot.Write(makeBuffer(oppset, one, two), 0, bytesCount);
-            }
-
+            COMPortRobot.Write(makeBuffer(oppcode, one, two), 0, makeBuffer(oppcode, one, two).Length);
         }
 
-        private byte[] makeBuffer(byte oppset, byte one, byte two)
+        private byte[] makeBuffer(byte oppcode, byte one, byte two)
         {
-            // Пример: ID,OPPSET,ONE,TWO,CRC8
-            byte[] toCRC8 = { ID, oppset, one, two };
-            byte [] buf = {ID ,oppset, one, two, CRC8(toCRC8, toCRC8.Length)};
+            // Пример: ID,oppcode,ONE,TWO,CRC8
+            byte[] toCRC8 = { ID, oppcode, one, two };
+            byte [] buf = {ID ,oppcode, one, two, CRC8(toCRC8, toCRC8.Length)};
             return buf;
             
 

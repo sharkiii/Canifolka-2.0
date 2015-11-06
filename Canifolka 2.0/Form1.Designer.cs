@@ -33,6 +33,8 @@
             this.labelRightX = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
+            this.comboBoxPorts = new System.Windows.Forms.ComboBox();
+            this.btnPortOK = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -65,11 +67,11 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(356, 59);
+            this.label2.Location = new System.Drawing.Point(299, 29);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(35, 13);
+            this.label2.Size = new System.Drawing.Size(46, 13);
             this.label2.TabIndex = 3;
-            this.label2.Text = "label2";
+            this.label2.Text = "Порты :";
             // 
             // button1
             // 
@@ -81,11 +83,32 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // comboBoxPorts
+            // 
+            this.comboBoxPorts.FormattingEnabled = true;
+            this.comboBoxPorts.Location = new System.Drawing.Point(351, 26);
+            this.comboBoxPorts.Name = "comboBoxPorts";
+            this.comboBoxPorts.Size = new System.Drawing.Size(114, 21);
+            this.comboBoxPorts.TabIndex = 5;
+            this.comboBoxPorts.SelectedIndexChanged += new System.EventHandler(this.comboBoxPorts_SelectedIndexChanged);
+            // 
+            // btnPortOK
+            // 
+            this.btnPortOK.Location = new System.Drawing.Point(472, 26);
+            this.btnPortOK.Name = "btnPortOK";
+            this.btnPortOK.Size = new System.Drawing.Size(35, 23);
+            this.btnPortOK.TabIndex = 6;
+            this.btnPortOK.Text = "ОК";
+            this.btnPortOK.UseVisualStyleBackColor = true;
+            this.btnPortOK.Click += new System.EventHandler(this.btnPortOK_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(538, 392);
+            this.Controls.Add(this.btnPortOK);
+            this.Controls.Add(this.comboBoxPorts);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelRightX);
@@ -107,6 +130,8 @@
         private System.Windows.Forms.Label labelRightX;
         private System.Windows.Forms.Button button1;
         public System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox comboBoxPorts;
+        private System.Windows.Forms.Button btnPortOK;
     }
 }
 
