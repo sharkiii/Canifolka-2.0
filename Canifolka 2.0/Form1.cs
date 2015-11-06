@@ -20,8 +20,9 @@ namespace Canifolka_2._0
         public Form1()
         {
             InitializeComponent();
-            if (joystick.IsConnected) label1.Text = "Джойстик подключен";
-            else label1.Text = "Джойстик отключен";
+            if (joystick.IsConnected) checkBoxStick.Checked = true;
+            else checkBoxStick.Checked = false;
+
             joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
             dataFromJoystick = new Thread(JoyState) { IsBackground = true};
             dataFromJoystick.Start();
@@ -32,9 +33,9 @@ namespace Canifolka_2._0
             {
                 if (joystick.IsConnected == true)
                 {
-                    label1.Text = "Джойстик подключен";
+                    checkBoxStick.Checked = true;
                 }
-                else label1.Text = "Джойстик отключен";
+                else checkBoxStick.Checked = false;
             };
             if (InvokeRequired)
             {
@@ -75,12 +76,22 @@ namespace Canifolka_2._0
 
         private void button1_Click(object sender, EventArgs e)
         {
-            enot.transmitData(0x02, 0x00, 0x00);
+            if (button1.Text == "ON")
+            {
+                enot.transmitData(0x02, 0x00, 0x00);
+                button1.Text = "OFF";
+            }
+            else
+            {
+                enot.transmitData(0x03, 0x00, 0x00);
+                button1.Text = "ON";
+            }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
            dataFromJoystick.Abort();
+           
         }
 
         private void comboBoxPorts_SelectedIndexChanged(object sender, EventArgs e)

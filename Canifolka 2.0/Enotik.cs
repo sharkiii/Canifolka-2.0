@@ -15,6 +15,7 @@ namespace Canifolka_2._0
         private Robot _robotSpeed;
         private SerialPort COMPortRobot;
         private const byte ID = 0x01;
+        private const byte IDreceived = 0x81;
         private const int BaudRate = 9600;
         public Enotik()
         {
@@ -31,11 +32,37 @@ namespace Canifolka_2._0
             COMPortRobot.DataReceived += new SerialDataReceivedEventHandler(COMPortRobot_DataReceived);
         }
         private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        { 
-            
-        
+        {
+            byte[] inputBuffer = new byte[5];
+            COMPortRobot.Read(inputBuffer,0,5);
+            if (inputBuffer[0] == IDreceived)
+            {
+                Action action = () =>
+                {
+                    Program.form1.checkBoxRobot.Checked = true;
+                };
+                Program.form1.Invoke(action);
+                checkOppcodes(inputBuffer);
+            }
+            else 
+            {
+                Action action = () =>
+                {
+                    Program.form1.checkBoxRobot.Checked = true;
+                };
+                Program.form1.Invoke(action);
+            }
+            inputBuffer[0] = 0;
         }
-        
+
+        private void checkOppcodes(byte[] inputBuffer)
+        { 
+            switch(inputBuffer[1])
+            {
+                case 0x02:
+                    break;
+            }
+        }
        
         private static readonly byte[] crc8Table = new byte[]{
             0x00, 0x31, 0x62, 0x53, 0xC4, 0xF5, 0xA6, 0x97,
@@ -77,7 +104,7 @@ namespace Canifolka_2._0
         { 
             while (true)
             {
-                transmitData(0x02,0x00,0x00);
+                transmitData(0x01,0x00,0x00);
                 Thread.Sleep(100);
             }
         }
@@ -93,7 +120,10 @@ namespace Canifolka_2._0
 
         public void transmitData(byte oppcode, byte one, byte two)
         {
-            COMPortRobot.Write(makeBuffer(oppcode, one, two), 0, makeBuffer(oppcode, one, two).Length);
+            if (COMPortRobot.IsOpen)
+            {
+                COMPortRobot.Write(makeBuffer(oppcode, one, two), 0, makeBuffer(oppcode, one, two).Length);
+            }
         }
 
         private byte[] makeBuffer(byte oppcode, byte one, byte two)

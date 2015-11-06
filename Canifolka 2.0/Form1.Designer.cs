@@ -28,23 +28,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.label1 = new System.Windows.Forms.Label();
             this.label_leftY = new System.Windows.Forms.Label();
             this.labelRightX = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.comboBoxPorts = new System.Windows.Forms.ComboBox();
             this.btnPortOK = new System.Windows.Forms.Button();
+            this.checkBoxStick = new System.Windows.Forms.CheckBox();
+            this.checkBoxRobot = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(107, 59);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(110, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Джойстик отключен";
             // 
             // label_leftY
             // 
@@ -79,7 +71,7 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(122, 40);
             this.button1.TabIndex = 4;
-            this.button1.Text = "SEND";
+            this.button1.Text = "ON";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -102,18 +94,39 @@
             this.btnPortOK.UseVisualStyleBackColor = true;
             this.btnPortOK.Click += new System.EventHandler(this.btnPortOK_Click);
             // 
+            // checkBoxStick
+            // 
+            this.checkBoxStick.AutoSize = true;
+            this.checkBoxStick.Location = new System.Drawing.Point(35, 25);
+            this.checkBoxStick.Name = "checkBoxStick";
+            this.checkBoxStick.Size = new System.Drawing.Size(132, 17);
+            this.checkBoxStick.TabIndex = 7;
+            this.checkBoxStick.Text = "Связь с джойстиком";
+            this.checkBoxStick.UseVisualStyleBackColor = true;
+            // 
+            // checkBoxRobot
+            // 
+            this.checkBoxRobot.AutoSize = true;
+            this.checkBoxRobot.Location = new System.Drawing.Point(35, 59);
+            this.checkBoxRobot.Name = "checkBoxRobot";
+            this.checkBoxRobot.Size = new System.Drawing.Size(112, 17);
+            this.checkBoxRobot.TabIndex = 8;
+            this.checkBoxRobot.Text = "Связь с роботом";
+            this.checkBoxRobot.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(538, 392);
+            this.Controls.Add(this.checkBoxRobot);
+            this.Controls.Add(this.checkBoxStick);
             this.Controls.Add(this.btnPortOK);
             this.Controls.Add(this.comboBoxPorts);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelRightX);
             this.Controls.Add(this.label_leftY);
-            this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -125,13 +138,14 @@
 
         #endregion
 
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label_leftY;
         private System.Windows.Forms.Label labelRightX;
         private System.Windows.Forms.Button button1;
         public System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox comboBoxPorts;
         private System.Windows.Forms.Button btnPortOK;
+        private System.Windows.Forms.CheckBox checkBoxStick;
+        public System.Windows.Forms.CheckBox checkBoxRobot;
     }
 }
 
