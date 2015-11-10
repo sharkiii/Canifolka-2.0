@@ -16,12 +16,14 @@ namespace Canifolka_2._0
         Joystick joystick = new Joystick();
         Robot robotspeed = new Robot();
         Enotik enot;
+        private Thread sendDataToRobot;
         public Form1()
         {
             InitializeComponent();
             if (joystick.IsConnected) checkBoxStick.Checked = true;
             else checkBoxStick.Checked = false;
 
+            sendDataToRobot = new Thread(SendToRobot){IsBackground = true};
             joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
         }
         private void OnIsConnectChange(object sender, EventArgs e)
@@ -42,6 +44,17 @@ namespace Canifolka_2._0
             else { action(); }
         }
 
+        private void SendToRobot()
+        {
+            while (true)
+            {
+                robotspeed.SetSpeed();
+                enot.TransmitData(0x01,robotspeed.SpeedRightSideForTransmittion,
+                    robotspeed.SpeedLeftSideForTransmittion);
+                Thread.Sleep(100);
+            }
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             enot = new Enotik();
@@ -54,12 +67,12 @@ namespace Canifolka_2._0
         {
             if (button1.Text == "ON")
             {
-                enot.transmitData(0x02, 0x00, 0x00);
+                enot.TransmitData(0x02, 0x00, 0x00);
                 button1.Text = "OFF";
             }
             else
             {
-                enot.transmitData(0x03, 0x00, 0x00);
+                enot.TransmitData(0x03, 0x00, 0x00);
                 button1.Text = "ON";
             }
         }
@@ -78,7 +91,7 @@ namespace Canifolka_2._0
         {
             if (comboBoxPorts.SelectedItem != null)
             {
-                enot.initComPortAndThread(comboBoxPorts.SelectedItem.ToString());
+                enot.OpenPort(comboBoxPorts.SelectedItem.ToString());
                 comboBoxPorts.Enabled = false;
             }
             else 

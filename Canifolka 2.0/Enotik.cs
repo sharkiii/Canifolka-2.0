@@ -12,59 +12,140 @@ namespace Canifolka_2._0
 {
     class Enotik
     {
-        private Robot _robotSpeed;
-        private SerialPort COMPortRobot;
-        private const byte ID = 0x01;
-        private const byte IDreceived = 0x81;
-        private const int BaudRate = 9600;
-        public Enotik()
-        {
-            _robotSpeed = new Robot();
-            COMPortRobot = new SerialPort();
-        }
-        public void initComPortAndThread(string portName)
-        {
-            COMPortRobot.BaudRate = BaudRate;
-            COMPortRobot.PortName = portName;
-            COMPortRobot.Open();
-            Thread checkRobotConnection = new Thread(checkedConection) { IsBackground = true };
-            checkRobotConnection.Start();
-            COMPortRobot.DataReceived += new SerialDataReceivedEventHandler(COMPortRobot_DataReceived);
-        }
-        private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            byte[] inputBuffer = new byte[5];
-            COMPortRobot.Read(inputBuffer,0,5);
-            if (inputBuffer[0] == IDreceived)
+        private readonly SerialPort _comPortRobot;
+        private readonly byte _id;
+        private readonly byte _idReceived;
+
+        private const int IdOffset = 0;
+        private const int OppcodeOffset = 1;
+        private const int DataHighOffset = 2;
+        private const int DataLowOffset = 3;
+        private const int Crc8Offset = 4;
+        
+        private const int MessageLenght = 5;
+        public bool IsConnected {
+            get
             {
-                Action action = () =>
-                {
-                    Program.form1.checkBoxRobot.Checked = true;
-                };
-                Program.form1.Invoke(action);
-                checkOppcodes(inputBuffer);
+                return _isConnected; 
             }
-            else 
+            set
             {
-                Action action = () =>
-                {
-                    Program.form1.checkBoxRobot.Checked = true;
-                };
-                Program.form1.Invoke(action);
+                if (value == _isConnected) return;
+                _isConnected = value;
+                if (IsConnectedChanged != null) IsConnectedChanged(this, EventArgs.Empty);
             }
-            inputBuffer[0] = 0;
         }
 
-        private void checkOppcodes(byte[] inputBuffer)
-        { 
-            switch(inputBuffer[1])
+        public event EventHandler IsConnectedChanged;
+        private bool _isConnected;
+
+
+        public Enotik(byte id, int baudRate)
+        {
+            _id = id;
+            _idReceived = (_id |= (1 << 7));
+
+            _comPortRobot = new SerialPort();
+            _comPortRobot.BaudRate = baudRate;
+            Thread checkRobot = new Thread(CheckConnection){IsBackground = true};
+            _comPortRobot.DataReceived += COMPortRobot_DataReceived;
+        }
+        public void OpenPort(string portName)
+        {
+            
+            _comPortRobot.PortName = portName;
+            _comPortRobot.Open();
+            
+        }
+
+        private void CheckConnection()
+        {
+            while (true)
             {
-                case 0x02:
-                    break;
+                TransmitData(0x01,0x00,0x00);
+                Thread.Sleep(100);
             }
         }
-       
-        private static readonly byte[] crc8Table = new byte[]{
+
+
+        private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+
+            var port = sender as SerialPort;
+            if(port == null) return;
+            byte[] inputMessage = new byte[port.BytesToRead];
+
+            _comPortRobot.Read(inputMessage,0,port.BytesToRead);
+
+            ComposeMessage(inputMessage);
+
+            //if (ParseMessage(inputMessage))
+            //{
+            //    IsConnected = true;
+            //}
+            //else
+            //{
+            //    IsConnected = false;
+
+            //    for (int i = MessageLenght - 1; i>0; i--)
+            //    {
+            //        inputMessage[i-1] = inputMessage[i];
+            //    }
+
+            //    inputMessage[MessageLenght-1] = Convert.ToByte(_comPortRobot.ReadByte());
+
+            //}
+
+
+
+
+        }
+
+        private void ComposeMessage(byte[] message)
+        {
+            int countElements = message.Length;
+            int k = 0;
+
+            byte[] buffer = new byte[MessageLenght];
+            for (int i = 0; i < MessageLenght; i++)
+            {
+                buffer[i] = message[i];
+            }
+            k = 4;
+            while(k < countElements)
+            {
+                if (ParseMessage(buffer))
+                {
+                    k = 0;
+                }
+                else
+                {
+                    for (int i = MessageLenght - 1; i > 0; i--)
+                    {
+                        buffer[i - 1] = buffer[i];
+                    }
+                    k++;
+                    buffer[MessageLenght - 1] = message[k];
+                }
+            }
+
+
+        }
+
+        private bool ParseMessage(byte[] message)
+        {
+            byte[] toCrc8 = new byte[MessageLenght-1];
+
+            for (int i = 0; i < MessageLenght - 1; i++)
+            {
+                toCrc8[i] = message[i];
+
+            }
+
+            return message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(toCrc8,toCrc8.Length);
+        }
+
+        private static readonly byte[] Crc8Table = new byte[]{
             0x00, 0x31, 0x62, 0x53, 0xC4, 0xF5, 0xA6, 0x97,
             0xB9, 0x88, 0xDB, 0xEA, 0x7D, 0x4C, 0x1F, 0x2E,
             0x43, 0x72, 0x21, 0x10, 0x87, 0xB6, 0xE5, 0xD4,
@@ -99,40 +180,33 @@ namespace Canifolka_2._0
             0x3B, 0x0A, 0x59, 0x68, 0xFF, 0xCE, 0x9D, 0xAC
         };
 
-        // Постоянно посылаем контроллеру состояние джойстиков и + узнаем есть связь с ним вообще или нет
-        private void checkedConection()
-        { 
-            while (true)
-            {
-                _robotSpeed.SetSpeedForTransmittion();
-                transmitData(0x01,_robotSpeed.SpeedRightSideForTransmittion,
-                    _robotSpeed.SpeedLeftSideForTransmittion);
-                Thread.Sleep(100);
-            }
-        }
 
         // Считаем CRC8
         private byte CRC8(byte[] bytes, int len)
         {
             byte crc = 0xFF;
             for (var i = 0; i < len; i++)
-                crc = crc8Table[crc ^ bytes[i]];
+                crc = Crc8Table[crc ^ bytes[i]];
             return crc;
         }
 
-        public void transmitData(byte oppcode, byte one, byte two)
+        public void TransmitData(byte oppcode, byte one, byte two)
         {
-            if (COMPortRobot.IsOpen)
+            if (_comPortRobot.IsOpen)
             {
-                COMPortRobot.Write(makeBuffer(oppcode, one, two), 0, makeBuffer(oppcode, one, two).Length);
+                _comPortRobot.Write(MakeBuffer(oppcode, one, two), 0, MakeBuffer(oppcode, one, two).Length);
+            }
+            else
+            {
+                MessageBox.Show("Передача невозможна, порт закрыт!", "ОШИБКА",MessageBoxButtons.OK);
             }
         }
 
-        private byte[] makeBuffer(byte oppcode, byte one, byte two)
+        private byte[] MakeBuffer(byte oppcode, byte one, byte two)
         {
             // Пример: ID,oppcode,ONE,TWO,CRC8
-            byte[] toCRC8 = { ID, oppcode, one, two };
-            byte [] buf = {ID ,oppcode, one, two, CRC8(toCRC8, toCRC8.Length)};
+            byte[] toCrc8 = { _id, oppcode, one, two };
+            byte [] buf = {_id ,oppcode, one, two, CRC8(toCrc8, toCrc8.Length)};
             return buf;
             
 

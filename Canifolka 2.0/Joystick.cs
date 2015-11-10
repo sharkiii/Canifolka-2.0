@@ -159,8 +159,8 @@ namespace Canifolka_2._0
         }
         #endregion
 
-        public int newMaxRightTrigger = 0;
-        public int newMaxLeftTrigger = 0;
+        public int NewMaxRightTrigger = 0;
+        public int NewMaxLeftTrigger = 0;
         public event EventHandler IsConnectedChanged;
         private bool _isConnected;
         private Controller _controller;
@@ -170,8 +170,8 @@ namespace Canifolka_2._0
         public Joystick()
         {
            _controller = new Controller(UserIndex.One);
-           Thread ConnectionThread = new Thread(CheckConnectionAndPolling){IsBackground = true};
-           ConnectionThread.Start();
+           Thread connectionThread = new Thread(CheckConnectionAndPolling){IsBackground = true};
+           connectionThread.Start();
         }
 
         // Метод, который вызывается в потоке и служит для обработки джойстика и 
@@ -185,7 +185,7 @@ namespace Canifolka_2._0
                 {
                     _gamepad = _controller.GetState().Gamepad;
                     PollJoystick();
-                    PollLeftAndRightTriggers(newMaxRightTrigger, newMaxLeftTrigger);
+                    PollLeftAndRightTriggers(NewMaxRightTrigger, NewMaxLeftTrigger);
                 }
                 Thread.Sleep(50);
             }
