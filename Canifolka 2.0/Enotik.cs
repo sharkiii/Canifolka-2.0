@@ -12,7 +12,7 @@ namespace Canifolka_2._0
 {
     class Enotik
     {
-        public byte[] mainMessage = new byte[MessageLenght -2];
+        public byte[] MainMessage = new byte[MessageLenght -2];
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
@@ -89,20 +89,25 @@ namespace Canifolka_2._0
 
         private void ComposeMessage(byte[] message)
         {
+            // Определяем кол-во байт, считанных с буффера 
             int countElements = message.Length;
             int k = 0;
-
+            // Формируем массив из 5 элементов из буффера
             byte[] buffer = new byte[MessageLenght];
             for (int i = 0; i < MessageLenght; i++)
             {
                 buffer[i] = message[i];
             }
+
             k = 4;
             while(k < countElements)
             {
+                // Проверяем совпадает ли ID и CRC8, если да, то все ок, если нет, то сдигаем все на 1 байт
+                // и пробуем заново
                 if (ParseMessage(buffer))
                 {
                     k = 0;
+                    break;
                 }
                 else
                 {
@@ -121,19 +126,12 @@ namespace Canifolka_2._0
 
         private bool ParseMessage(byte[] message)
         {
-            byte[] toCrc8 = new byte[MessageLenght-1];
-
-            for (int i = 0; i < MessageLenght - 1; i++)
-            {
-                toCrc8[i] = message[i];
-
-            }
-
-            if (message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(toCrc8, toCrc8.Length))
+            
+            if (message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(message, message.Length - 1))
             {
                 for (int i = 0; i < MessageLenght - 2; i++)
                 {
-                    mainMessage[i] = message[i + 1];
+                    MainMessage[i] = message[i + 1];
                 }
                 return true;
             }
