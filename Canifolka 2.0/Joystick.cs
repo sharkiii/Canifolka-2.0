@@ -163,7 +163,7 @@ namespace Canifolka_2._0
         public int NewMaxLeftTrigger = 0;
         public event EventHandler IsConnectedChanged;
         private bool _isConnected;
-        private Controller _controller;
+        private readonly Controller _controller;
         private Gamepad _gamepad;
 
         // Конструктор, запуск потока для проверки и создание объектов джойстика

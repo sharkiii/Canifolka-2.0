@@ -12,10 +12,11 @@ namespace Canifolka_2._0
 {
     class Enotik
     {
+        public byte[] mainMessage = new byte[MessageLenght -2];
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
-
+        private Thread checkRobot;
         private const int IdOffset = 0;
         private const int OppcodeOffset = 1;
         private const int DataHighOffset = 2;
@@ -23,6 +24,7 @@ namespace Canifolka_2._0
         private const int Crc8Offset = 4;
         
         private const int MessageLenght = 5;
+
         public bool IsConnected {
             get
             {
@@ -43,26 +45,28 @@ namespace Canifolka_2._0
         public Enotik(byte id, int baudRate)
         {
             _id = id;
-            _idReceived = (_id |= (1 << 7));
+            _idReceived = (id |= (1 << 7));
 
             _comPortRobot = new SerialPort();
             _comPortRobot.BaudRate = baudRate;
-            Thread checkRobot = new Thread(CheckConnection){IsBackground = true};
+            checkRobot = new Thread(CheckConnection){IsBackground = true};
             _comPortRobot.DataReceived += COMPortRobot_DataReceived;
         }
         public void OpenPort(string portName)
         {
-            
-            _comPortRobot.PortName = portName;
-            _comPortRobot.Open();
-            
+            if (!_comPortRobot.IsOpen)
+            {
+                _comPortRobot.PortName = portName;
+                _comPortRobot.Open();
+                checkRobot.Start();
+            }
         }
 
         private void CheckConnection()
         {
             while (true)
             {
-                TransmitData(0x01,0x00,0x00);
+                TransmitData(0x00,0x00,0x00);
                 Thread.Sleep(100);
             }
         }
@@ -70,34 +74,16 @@ namespace Canifolka_2._0
 
         private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-
+            
             var port = sender as SerialPort;
             if(port == null) return;
             byte[] inputMessage = new byte[port.BytesToRead];
+            if (port.BytesToRead >= 5)
+            {
+                _comPortRobot.Read(inputMessage, 0, port.BytesToRead);
 
-            _comPortRobot.Read(inputMessage,0,port.BytesToRead);
-
-            ComposeMessage(inputMessage);
-
-            //if (ParseMessage(inputMessage))
-            //{
-            //    IsConnected = true;
-            //}
-            //else
-            //{
-            //    IsConnected = false;
-
-            //    for (int i = MessageLenght - 1; i>0; i--)
-            //    {
-            //        inputMessage[i-1] = inputMessage[i];
-            //    }
-
-            //    inputMessage[MessageLenght-1] = Convert.ToByte(_comPortRobot.ReadByte());
-
-            //}
-
-
-
+                ComposeMessage(inputMessage);
+            }
 
         }
 
@@ -128,6 +114,7 @@ namespace Canifolka_2._0
                     buffer[MessageLenght - 1] = message[k];
                 }
             }
+            k = 0;
 
 
         }
@@ -142,7 +129,18 @@ namespace Canifolka_2._0
 
             }
 
-            return message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(toCrc8,toCrc8.Length);
+            if (message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(toCrc8, toCrc8.Length))
+            {
+                for (int i = 0; i < MessageLenght - 2; i++)
+                {
+                    mainMessage[i] = message[i + 1];
+                }
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private static readonly byte[] Crc8Table = new byte[]{
