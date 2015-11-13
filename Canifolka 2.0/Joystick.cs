@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using SharpDX.XInput;
@@ -46,104 +47,45 @@ namespace Canifolka_2._0
         #endregion
 
         #region PropertiesBool
-        public bool ButtonA
-        {
+
+        public bool ButtonA {
             get
             {
+
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
             }
-        }
-        public bool ButtonY 
-        { 
-            get 
+            set
             {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.Y);
-            }
-        }
-        public bool ButtonX 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.X);
-            }
-        }
-        public bool ButtonB 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
-            }
-        }
-        public bool LeftThumb 
-        { 
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftThumb);
-            }
-        }
-        public bool RightThumb {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.RightThumb);
-            }
-        }
-        public bool ButtonStart 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.Start);
-            }
-        }
-        public bool ButtonBack 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.Back);
-            } 
-        }
-        public bool DPadUp 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp);
-            }
-        }
-        public bool DPadDown 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown);
-            }
-        }
-        public bool DPadRight 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight);
+                if (ButtonAStateChanged != null && value && !_prevValButtonA) ButtonAStateChanged(this, EventArgs.Empty);
+                _prevValButtonA = value;
             }
         }
 
-        public bool DPadLeft 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadLeft);
-            }
-        }
-        public bool RightShoulder 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.RightShoulder);
-            }
-        }
-        public bool LeftShoulder 
-        {
-            get
-            {
-                return _gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftShoulder);
-            } 
-        }
+        public bool ButtonY { get; set; }
+        public bool ButtonX { get; set; }
+
+        public bool ButtonB { get; set; }
+
+        public bool LeftThumb { get; set; }
+
+        public bool RightThumb { get; set; }
+
+        public bool ButtonStart { get; set; }
+
+        public bool ButtonBack { get; set; }
+
+        public bool DPadUp { get; set; }
+
+        public bool DPadDown { get; set; }
+
+        public bool DPadRight { get; set; }
+
+        public bool DPadLeft { get; set; }
+
+        public bool RightShoulder { get; set; }
+
+        public bool LeftShoulder { get; set; }
+
         public bool IsConnected 
         {
             get
@@ -162,35 +104,35 @@ namespace Canifolka_2._0
         public int NewMaxRightTrigger = 0;
         public int NewMaxLeftTrigger = 0;
         public event EventHandler IsConnectedChanged;
+        public event EventHandler ButtonAStateChanged;
         private bool _isConnected;
         private readonly Controller _controller;
         private Gamepad _gamepad;
+        private bool _prevValButtonA = false;
 
         // Конструктор, запуск потока для проверки и создание объектов джойстика
         public Joystick()
         {
            _controller = new Controller(UserIndex.One);
-           Thread connectionThread = new Thread(CheckConnectionAndPolling){IsBackground = true};
-           connectionThread.Start();
         }
 
         // Метод, который вызывается в потоке и служит для обработки джойстика и 
         // проверки его подключения
-        private void CheckConnectionAndPolling()
+        public void CheckConnectionAndPolling()
         { 
-            while(true)
+            
+            IsConnected = _controller.IsConnected;
+            if (_isConnected)
             {
-                IsConnected = _controller.IsConnected;
-                if (_isConnected)
-                {
-                    _gamepad = _controller.GetState().Gamepad;
-                    PollJoystick();
-                    PollLeftAndRightTriggers(NewMaxRightTrigger, NewMaxLeftTrigger);
-                }
-                Thread.Sleep(50);
+                _gamepad = _controller.GetState().Gamepad;
+                PollJoystick();
+                PollButtons();
+                PollLeftAndRightTriggers(NewMaxRightTrigger, NewMaxLeftTrigger);
             }
-
+            Thread.Sleep(50);
+            
         }
+
         // Функция аналогичная ардуиновской
         private int Map(int data, int inMin, int inMax, int outMin, int outMax)
         {
@@ -262,9 +204,6 @@ namespace Canifolka_2._0
                 }
                 else RightY = 0;
             }
-
-
-
         }
 
         private void PollLeftAndRightTriggers(int newMaxRight, int newMaxLeft)
@@ -274,6 +213,24 @@ namespace Canifolka_2._0
 
             LeftTrigger = Map(_gamepad.LeftTrigger, MinTriggerValue, MaxTriggerValue,
                 MinTriggerValue, newMaxLeft);
+        }
+
+        private void PollButtons()
+        {
+            ButtonA = _gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
+            ButtonB = _gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
+            // ButtonX = _gamepad.Buttons.HasFlag(GamepadButtonFlags.X);
+            ButtonY = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Y);
+            ButtonStart = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Start);
+            ButtonBack = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Back);
+            LeftShoulder = _gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftShoulder);
+            RightShoulder = _gamepad.Buttons.HasFlag(GamepadButtonFlags.RightShoulder);
+            LeftThumb = _gamepad.Buttons.HasFlag(GamepadButtonFlags.LeftThumb);
+            RightThumb = _gamepad.Buttons.HasFlag(GamepadButtonFlags.RightThumb);
+            DPadUp = _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadUp);
+            DPadDown = _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadDown);
+            DPadRight = _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight);
+            DPadLeft = _gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadLeft);
         }
     }
 }

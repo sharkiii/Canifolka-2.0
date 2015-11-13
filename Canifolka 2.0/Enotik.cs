@@ -16,7 +16,7 @@ namespace Canifolka_2._0
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
-        private Thread checkRobot;
+        private readonly Thread _checkRobot;
         private const int IdOffset = 0;
         private const int OppcodeOffset = 1;
         private const int DataHighOffset = 2;
@@ -50,7 +50,7 @@ namespace Canifolka_2._0
 
             _comPortRobot = new SerialPort();
             _comPortRobot.BaudRate = baudRate;
-            checkRobot = new Thread(CheckConnection){IsBackground = true};
+            _checkRobot = new Thread(CheckConnection){IsBackground = true};
             _comPortRobot.DataReceived += COMPortRobot_DataReceived;
         }
         public void OpenPort(string portName)
@@ -59,7 +59,7 @@ namespace Canifolka_2._0
             {
                 _comPortRobot.PortName = portName;
                 _comPortRobot.Open();
-                checkRobot.Start();
+                _checkRobot.Start();
             }
         }
 
@@ -134,26 +134,22 @@ namespace Canifolka_2._0
                 {
                     var buffer = _composerQueue.ToArray();
 
-                    if(ParseMessage(buffer)) _composerQueue.Clear();
+                    if (buffer[IdOffset] == _idReceived &&
+                        buffer[MessageLenght - 1] == CRC8(message, message.Length - 1))
+                    {
+                        ParseMessage(buffer);
+                    }
                 }
             }
         }
 
-        private bool ParseMessage(byte[] message)
+        private void ParseMessage(byte[] message)
         {
-            
-            if (message[IdOffset] == _idReceived && message[MessageLenght - 1] == CRC8(message, message.Length - 1))
+            for (int i = 0; i < MessageLenght - 2; i++)
             {
-                for (int i = 0; i < MessageLenght - 2; i++)
-                {
-                    MainMessage[i] = message[i + 1];
-                }
-                return true;
+                MainMessage[i] = message[i + 1];
             }
-            else
-            {
-                return false;
-            }
+           
         }
 
         private static readonly byte[] Crc8Table = new byte[]{

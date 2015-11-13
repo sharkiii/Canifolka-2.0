@@ -19,35 +19,5 @@ namespace Canifolka_2._0
         {
         }
 
-       
-        // Приводим скорость к значения с джойстика
-        //public void SetSpeed()
-        //{
-        //    // speedLeftSide = _joystick.LeftY + _joystick.RightX;
-        //    // speedRightSide = _joystick.LeftY - _joystick.RightX;
-
-        //    speedLeftSide = Math.Max(MinSpeed, Math.Min(MaxSpeed, speedLeftSide));
-        //    speedRightSide = Math.Max(MinSpeed, Math.Min(MaxSpeed, speedRightSide));
-
-        //    _joystick.NewMaxRightTrigger = speedRightSide;
-        //    _joystick.NewMaxLeftTrigger = speedLeftSide;
-
-        //    speedRightSide = speedRightSide - _joystick.RightTrigger;
-        //    speedLeftSide = speedLeftSide - _joystick.LeftTrigger;
-
-        //    if (!_joystick.IsConnected)
-        //    {
-        //        speedLeftSide = 0;
-        //        speedRightSide = 0;
-        //    }
-
-        //    SpeedLeftSideForTransmittion = Convert.ToByte(speedLeftSide);
-        //    SpeedRightSideForTransmittion = Convert.ToByte(speedRightSide);
-
-        //    SpeedLeftSideForTransmittion += 100;
-        //    SpeedRightSideForTransmittion += 100;
-
-        //}
-
     }
 }

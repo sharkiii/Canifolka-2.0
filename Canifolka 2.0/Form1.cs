@@ -13,8 +13,15 @@ namespace Canifolka_2._0
 {
     public partial class Form1 : Form
     {
-        Joystick _joystick = new Joystick();
-        Robot _robot = new Robot();
+        #region ModeStateBooleans
+
+        private bool _driveLine = false;
+         
+
+        #endregion
+
+        readonly Joystick _joystick = new Joystick();
+        readonly Robot _robot = new Robot();
         Enotik enot;
         private const byte ID = 0x01;
         private const int BaudRate = 9600;
@@ -22,17 +29,33 @@ namespace Canifolka_2._0
         private int _speedRightSide;
         private int _speedLeftSide;
 
+        private const int ConstForTransmittion = 100;
         private Thread _sendDataToRobot;
+        private Thread _pollJoystick;
         public Form1()
         {
             InitializeComponent();
             if (_joystick.IsConnected) checkBoxStick.Checked = true;
             else checkBoxStick.Checked = false;
 
-           // _sendDataToRobot = new Thread(SendToRobot){IsBackground = true};
+            _sendDataToRobot = new Thread(SendToRobot){IsBackground = true};
+            _pollJoystick = new Thread(CheckStickConnectionAndPollIt){IsBackground = true};
+            _pollJoystick.Start();
             _joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
+            _joystick.ButtonAStateChanged += new EventHandler(OnAPressed);
 
         }
+
+        private void OnAPressed(object sender, EventArgs e)
+        {
+            Action action = () =>
+            {
+                _driveLine = !_driveLine;
+                checkBoxRobot.Checked = _driveLine;
+            };
+            Invoke(action);
+        }
+
         private void OnIsConnectChange(object sender, EventArgs e)
         {
             Action action = () =>
@@ -70,15 +93,34 @@ namespace Canifolka_2._0
                 _speedLeftSide = 0;
                 _speedRightSide = 0;
             }
+
+            _robot.SpeedLeftSideForTransmittion = Convert.ToByte(_speedLeftSide + ConstForTransmittion);
+            _robot.SpeedRightSideForTransmittion = Convert.ToByte(_speedRightSide + ConstForTransmittion);
+
+        }
+
+        private void CheckStickConnectionAndPollIt()
+        {
+            while (true)
+            {
+                _joystick.CheckConnectionAndPolling();
+                CheckButtons();
+                Thread.Sleep(100);
+            }
         }
 
         private void SendToRobot()
         {
             while (true)
             {
-                enot.TransmitData(0x00,0x00,0x00);
+                SetSpeed();
+                enot.TransmitData(0x00,_robot.SpeedRightSideForTransmittion,_robot.SpeedLeftSideForTransmittion);
                 Thread.Sleep(100);
             }
+        }
+
+        private void CheckButtons()
+        {
         }
 
         private void Form1_Load(object sender, EventArgs e)
