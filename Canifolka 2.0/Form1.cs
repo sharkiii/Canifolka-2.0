@@ -30,7 +30,6 @@ namespace Canifolka_2._0
         private int _speedLeftSide;
 
         private const int ConstForTransmittion = 100;
-        private Thread _sendDataToRobot;
         private Thread _pollJoystick;
         public Form1()
         {
@@ -38,7 +37,6 @@ namespace Canifolka_2._0
             if (_joystick.IsConnected) checkBoxStick.Checked = true;
             else checkBoxStick.Checked = false;
 
-            _sendDataToRobot = new Thread(SendToRobot){IsBackground = true};
             _pollJoystick = new Thread(CheckStickConnectionAndPollIt){IsBackground = true};
             _pollJoystick.Start();
             _joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
@@ -104,23 +102,10 @@ namespace Canifolka_2._0
             while (true)
             {
                 _joystick.CheckConnectionAndPolling();
-                CheckButtons();
-                Thread.Sleep(100);
-            }
-        }
-
-        private void SendToRobot()
-        {
-            while (true)
-            {
                 SetSpeed();
-                enot.TransmitData(0x00,_robot.SpeedRightSideForTransmittion,_robot.SpeedLeftSideForTransmittion);
+                enot.TransmitData(0x00, _robot.SpeedRightSideForTransmittion, _robot.SpeedLeftSideForTransmittion);
                 Thread.Sleep(100);
             }
-        }
-
-        private void CheckButtons()
-        {
         }
 
         private void Form1_Load(object sender, EventArgs e)

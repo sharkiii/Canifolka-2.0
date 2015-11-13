@@ -48,10 +48,10 @@ namespace Canifolka_2._0
 
         #region PropertiesBool
 
-        public bool ButtonA {
+        public bool ButtonA 
+        {
             get
             {
-
                 return _gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
             }
             set
@@ -120,7 +120,6 @@ namespace Canifolka_2._0
         // проверки его подключения
         public void CheckConnectionAndPolling()
         { 
-            
             IsConnected = _controller.IsConnected;
             if (_isConnected)
             {
@@ -128,9 +127,7 @@ namespace Canifolka_2._0
                 PollJoystick();
                 PollButtons();
                 PollLeftAndRightTriggers(NewMaxRightTrigger, NewMaxLeftTrigger);
-            }
-            Thread.Sleep(50);
-            
+            }  
         }
 
         // Функция аналогичная ардуиновской
@@ -219,7 +216,7 @@ namespace Canifolka_2._0
         {
             ButtonA = _gamepad.Buttons.HasFlag(GamepadButtonFlags.A);
             ButtonB = _gamepad.Buttons.HasFlag(GamepadButtonFlags.B);
-            // ButtonX = _gamepad.Buttons.HasFlag(GamepadButtonFlags.X);
+            ButtonX = _gamepad.Buttons.HasFlag(GamepadButtonFlags.X);
             ButtonY = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Y);
             ButtonStart = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Start);
             ButtonBack = _gamepad.Buttons.HasFlag(GamepadButtonFlags.Back);

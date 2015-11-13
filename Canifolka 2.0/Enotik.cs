@@ -12,7 +12,7 @@ namespace Canifolka_2._0
 {
     class Enotik
     {
-        public byte[] MainMessage = new byte[MessageLenght -2];
+        public byte[] MainMessage = new byte[MessageLength -2];
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
@@ -22,7 +22,7 @@ namespace Canifolka_2._0
         private const int DataHighOffset = 2;
         private const int DataLowOffset = 3;
         private const int Crc8Offset = 4;
-        private const int MessageLenght = 5;
+        private const int MessageLength = 5;
 
         private Queue<byte> _composerQueue;
 
@@ -79,7 +79,7 @@ namespace Canifolka_2._0
             var port = sender as SerialPort;
             if(port == null) return;
             byte[] inputMessage = new byte[port.BytesToRead];
-            if (port.BytesToRead >= 5)
+            if (port.BytesToRead >= MessageLength)
             {
                 _comPortRobot.Read(inputMessage, 0, port.BytesToRead);
 
@@ -90,54 +90,20 @@ namespace Canifolka_2._0
 
         private void ComposeMessage(byte[] message)
         {
-            #region CommentedCompose
-            //// Определяем кол-во байт, считанных с буффера 
-            //int countElements = message.Length;
-            //int k = 0;
-            //// Формируем массив из 5 элементов из буффера
-            //byte[] buffer = new byte[MessageLenght];
-            //for (int i = 0; i < MessageLenght; i++)
-            //{
-            //    buffer[i] = message[i];
-            //}
-
-            //k = 4;
-            //while(k < countElements)
-            //{
-            //    // Проверяем совпадает ли ID и CRC8, если да, то все ок, если нет, то сдигаем все на 1 байт
-            //    // и пробуем заново
-            //    if (ParseMessage(buffer))
-            //    {
-            //        k = 0;
-            //        break;
-            //    }
-            //    else
-            //    {
-            //        for (int i = MessageLenght - 1; i > 0; i--)
-            //        {
-            //            buffer[i - 1] = buffer[i];
-            //        }
-            //        k++;
-            //        buffer[MessageLenght - 1] = message[k];
-            //    }
-            //}
-            //k = 0;
-
-    #endregion
-
             for (int i = 0; i < message.Length; i++)
             {
-                if (_composerQueue.Count == MessageLenght) _composerQueue.Dequeue();
+                if (_composerQueue.Count == MessageLength) _composerQueue.Dequeue();
                 _composerQueue.Enqueue(message[i]);
 
-                if (_composerQueue.Count == MessageLenght)
+                if (_composerQueue.Count == MessageLength)
                 {
                     var buffer = _composerQueue.ToArray();
 
                     if (buffer[IdOffset] == _idReceived &&
-                        buffer[MessageLenght - 1] == CRC8(message, message.Length - 1))
+                        buffer[MessageLength - 1] == CRC8(message, message.Length - 1))
                     {
-                        ParseMessage(buffer);
+                        Task.Run(()=>ParseMessage(buffer));
+                        _composerQueue.Clear();
                     }
                 }
             }
@@ -145,7 +111,7 @@ namespace Canifolka_2._0
 
         private void ParseMessage(byte[] message)
         {
-            for (int i = 0; i < MessageLenght - 2; i++)
+            for (int i = 0; i < MessageLength - 2; i++)
             {
                 MainMessage[i] = message[i + 1];
             }
@@ -202,10 +168,6 @@ namespace Canifolka_2._0
             if (_comPortRobot.IsOpen)
             {
                 _comPortRobot.Write(MakeBuffer(oppcode, one, two), 0, MakeBuffer(oppcode, one, two).Length);
-            }
-            else
-            {
-                MessageBox.Show("Передача невозможна, порт закрыт!", "ОШИБКА",MessageBoxButtons.OK);
             }
         }
 
