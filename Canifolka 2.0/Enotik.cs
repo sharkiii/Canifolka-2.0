@@ -22,8 +22,9 @@ namespace Canifolka_2._0
         private const int DataHighOffset = 2;
         private const int DataLowOffset = 3;
         private const int Crc8Offset = 4;
-        
         private const int MessageLenght = 5;
+
+        private Queue<byte> _composerQueue;
 
         public bool IsConnected {
             get
@@ -89,39 +90,53 @@ namespace Canifolka_2._0
 
         private void ComposeMessage(byte[] message)
         {
-            // Определяем кол-во байт, считанных с буффера 
-            int countElements = message.Length;
-            int k = 0;
-            // Формируем массив из 5 элементов из буффера
-            byte[] buffer = new byte[MessageLenght];
-            for (int i = 0; i < MessageLenght; i++)
+            #region CommentedCompose
+            //// Определяем кол-во байт, считанных с буффера 
+            //int countElements = message.Length;
+            //int k = 0;
+            //// Формируем массив из 5 элементов из буффера
+            //byte[] buffer = new byte[MessageLenght];
+            //for (int i = 0; i < MessageLenght; i++)
+            //{
+            //    buffer[i] = message[i];
+            //}
+
+            //k = 4;
+            //while(k < countElements)
+            //{
+            //    // Проверяем совпадает ли ID и CRC8, если да, то все ок, если нет, то сдигаем все на 1 байт
+            //    // и пробуем заново
+            //    if (ParseMessage(buffer))
+            //    {
+            //        k = 0;
+            //        break;
+            //    }
+            //    else
+            //    {
+            //        for (int i = MessageLenght - 1; i > 0; i--)
+            //        {
+            //            buffer[i - 1] = buffer[i];
+            //        }
+            //        k++;
+            //        buffer[MessageLenght - 1] = message[k];
+            //    }
+            //}
+            //k = 0;
+
+    #endregion
+
+            for (int i = 0; i < message.Length; i++)
             {
-                buffer[i] = message[i];
-            }
+                if (_composerQueue.Count == MessageLenght) _composerQueue.Dequeue();
+                _composerQueue.Enqueue(message[i]);
 
-            k = 4;
-            while(k < countElements)
-            {
-                // Проверяем совпадает ли ID и CRC8, если да, то все ок, если нет, то сдигаем все на 1 байт
-                // и пробуем заново
-                if (ParseMessage(buffer))
+                if (_composerQueue.Count == MessageLenght)
                 {
-                    k = 0;
-                    break;
-                }
-                else
-                {
-                    for (int i = MessageLenght - 1; i > 0; i--)
-                    {
-                        buffer[i - 1] = buffer[i];
-                    }
-                    k++;
-                    buffer[MessageLenght - 1] = message[k];
+                    var buffer = _composerQueue.ToArray();
+
+                    if(ParseMessage(buffer)) _composerQueue.Clear();
                 }
             }
-            k = 0;
-
-
         }
 
         private bool ParseMessage(byte[] message)
