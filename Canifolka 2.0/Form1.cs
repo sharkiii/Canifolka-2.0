@@ -23,12 +23,17 @@ namespace Canifolka_2._0
         readonly Joystick _joystick = new Joystick();
         readonly Robot _robot = new Robot();
         Enotik enot;
+        private const byte DriveOppcode = 0x01;
+        private const byte CameraOppcode = 0x02;
+        private const byte LineSensorOppcode = 0x03;
+        private const byte NullByte = 0x00;
         private const byte ID = 0x01;
         private const int BaudRate = 9600;
 
+        private byte _cameraState = 0x00;
+        private byte _lineSensorState = 0x00;
         private int _speedRightSide;
         private int _speedLeftSide;
-
         private const int ConstForTransmittion = 100;
         private Thread _pollJoystick;
         public Form1()
@@ -36,22 +41,32 @@ namespace Canifolka_2._0
             InitializeComponent();
             if (_joystick.IsConnected) checkBoxStick.Checked = true;
             else checkBoxStick.Checked = false;
-
+            enot = new Enotik(0x01, BaudRate);
             _pollJoystick = new Thread(CheckStickConnectionAndPollIt){IsBackground = true};
             _pollJoystick.Start();
             _joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
             _joystick.ButtonAStateChanged += new EventHandler(OnAPressed);
+            _joystick.ButtonStartStateChanged += new EventHandler(OnStartPressed);
+            enot.MessageReceived += new EventHandler<byte[]>(OnMessageReceived);
 
         }
 
+        private void OnMessageReceived(object sender, byte[] e)
+        {
+            // Здесь уже делаем проверку по oppcode и так далее
+        }
+
+        private void OnStartPressed(object sender, EventArgs e)
+        {
+            if (_cameraState == 0x00) _cameraState = 0x01;
+            else _cameraState = 0x00;
+        }
+
+
         private void OnAPressed(object sender, EventArgs e)
         {
-            Action action = () =>
-            {
-                _driveLine = !_driveLine;
-                checkBoxRobot.Checked = _driveLine;
-            };
-            Invoke(action);
+            if (_lineSensorState == 0x00) _lineSensorState = 0x01;
+            else _lineSensorState = 0x00;
         }
 
         private void OnIsConnectChange(object sender, EventArgs e)
@@ -103,14 +118,15 @@ namespace Canifolka_2._0
             {
                 _joystick.CheckConnectionAndPolling();
                 SetSpeed();
-                enot.TransmitData(0x00, _robot.SpeedRightSideForTransmittion, _robot.SpeedLeftSideForTransmittion);
+                enot.TransmitData(DriveOppcode, _robot.SpeedRightSideForTransmittion, _robot.SpeedLeftSideForTransmittion);
+                enot.TransmitData(CameraOppcode, _cameraState, NullByte);
+                enot.TransmitData(LineSensorOppcode, _lineSensorState, NullByte);
                 Thread.Sleep(100);
             }
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            enot = new Enotik(0x01, BaudRate);
             string[] myPorts;
             myPorts = System.IO.Ports.SerialPort.GetPortNames();
             comboBoxPorts.Items.AddRange(myPorts);

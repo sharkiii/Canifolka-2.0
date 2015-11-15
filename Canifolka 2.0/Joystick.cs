@@ -70,7 +70,14 @@ namespace Canifolka_2._0
 
         public bool RightThumb { get; set; }
 
-        public bool ButtonStart { get; set; }
+        public bool ButtonStart { 
+            get { return _gamepad.Buttons.HasFlag(GamepadButtonFlags.Start); }
+            set
+            {
+                if (ButtonStartStateChanged != null && value && !_prevValButtonStart) ButtonStartStateChanged(this, EventArgs.Empty);
+                _prevValButtonStart = value;
+            }
+        }
 
         public bool ButtonBack { get; set; }
 
@@ -105,10 +112,12 @@ namespace Canifolka_2._0
         public int NewMaxLeftTrigger = 0;
         public event EventHandler IsConnectedChanged;
         public event EventHandler ButtonAStateChanged;
+        public event EventHandler ButtonStartStateChanged;
         private bool _isConnected;
         private readonly Controller _controller;
         private Gamepad _gamepad;
         private bool _prevValButtonA = false;
+        private bool _prevValButtonStart = false;
 
         // Конструктор, запуск потока для проверки и создание объектов джойстика
         public Joystick()

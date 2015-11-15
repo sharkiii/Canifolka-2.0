@@ -12,7 +12,6 @@ namespace Canifolka_2._0
 {
     class Enotik
     {
-        public byte[] MainMessage = new byte[MessageLength -2];
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
@@ -23,7 +22,9 @@ namespace Canifolka_2._0
         private const int DataLowOffset = 3;
         private const int Crc8Offset = 4;
         private const int MessageLength = 5;
-
+        public event EventHandler<byte[]> MessageReceived;
+        public event EventHandler IsConnectedChanged;
+        private bool _isConnected;
         private Queue<byte> _composerQueue;
 
         public bool IsConnected {
@@ -39,8 +40,6 @@ namespace Canifolka_2._0
             }
         }
 
-        public event EventHandler IsConnectedChanged;
-        private bool _isConnected;
 
 
         public Enotik(byte id, int baudRate)
@@ -50,7 +49,6 @@ namespace Canifolka_2._0
 
             _comPortRobot = new SerialPort();
             _comPortRobot.BaudRate = baudRate;
-            _checkRobot = new Thread(CheckConnection){IsBackground = true};
             _comPortRobot.DataReceived += COMPortRobot_DataReceived;
         }
         public void OpenPort(string portName)
@@ -59,18 +57,9 @@ namespace Canifolka_2._0
             {
                 _comPortRobot.PortName = portName;
                 _comPortRobot.Open();
-                _checkRobot.Start();
             }
         }
 
-        private void CheckConnection()
-        {
-            while (true)
-            {
-                TransmitData(0x00,0x00,0x00);
-                Thread.Sleep(100);
-            }
-        }
 
 
         private void COMPortRobot_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -102,20 +91,29 @@ namespace Canifolka_2._0
                     if (buffer[IdOffset] == _idReceived &&
                         buffer[MessageLength - 1] == CRC8(message, message.Length - 1))
                     {
-                        Task.Run(()=>ParseMessage(buffer));
+                        // Массив в котором будет только 3 значащих байта, oppcode, dataHigh, dataLow
+                        byte[] buf = new byte[MessageLength - 2];
+
+                        for (int j = 0; j < MessageLength - 2; j++)
+                        {
+                            buf[j] = buffer[j + 1];
+                        }
+
+                        Task.Run(()=>ParseMessage(buf));
                         _composerQueue.Clear();
                     }
                 }
             }
         }
 
+        protected virtual void OnMessageReceived(byte[] e)
+        {
+            if (MessageReceived != null) MessageReceived(this, e);
+        }
+
         private void ParseMessage(byte[] message)
         {
-            for (int i = 0; i < MessageLength - 2; i++)
-            {
-                MainMessage[i] = message[i + 1];
-            }
-           
+            OnMessageReceived(message);
         }
 
         private static readonly byte[] Crc8Table = new byte[]{
