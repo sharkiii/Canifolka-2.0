@@ -15,7 +15,6 @@ namespace Canifolka_2._0
         private readonly SerialPort _comPortRobot;
         private readonly byte _id;
         private readonly byte _idReceived;
-        private readonly Thread _checkRobot;
         private const int IdOffset = 0;
         private const int OppcodeOffset = 1;
         private const int DataHighOffset = 2;
@@ -26,7 +25,8 @@ namespace Canifolka_2._0
         public event EventHandler IsConnectedChanged;
         private bool _isConnected;
         private Queue<byte> _composerQueue;
-
+        private int _counter;
+        private AutoResetEvent _autoEvent = new AutoResetEvent(false);
         public bool IsConnected {
             get
             {
@@ -40,8 +40,6 @@ namespace Canifolka_2._0
             }
         }
 
-
-
         public Enotik(byte id, int baudRate)
         {
             _id = id;
@@ -50,6 +48,7 @@ namespace Canifolka_2._0
             _comPortRobot = new SerialPort();
             _comPortRobot.BaudRate = baudRate;
             _comPortRobot.DataReceived += COMPortRobot_DataReceived;
+
         }
         public void OpenPort(string portName)
         {
@@ -70,7 +69,7 @@ namespace Canifolka_2._0
             byte[] inputMessage = new byte[port.BytesToRead];
             if (port.BytesToRead >= MessageLength)
             {
-                _comPortRobot.Read(inputMessage, 0, port.BytesToRead);
+                port.Read(inputMessage, 0, port.BytesToRead);
 
                 ComposeMessage(inputMessage);
             }
@@ -79,6 +78,7 @@ namespace Canifolka_2._0
 
         private void ComposeMessage(byte[] message)
         {
+            _composerQueue = new Queue<byte>();
             for (int i = 0; i < message.Length; i++)
             {
                 if (_composerQueue.Count == MessageLength) _composerQueue.Dequeue();
@@ -89,7 +89,7 @@ namespace Canifolka_2._0
                     var buffer = _composerQueue.ToArray();
 
                     if (buffer[IdOffset] == _idReceived &&
-                        buffer[MessageLength - 1] == CRC8(message, message.Length - 1))
+                        buffer[MessageLength - 1] == CRC8(message, MessageLength - 1))
                     {
                         // Массив в котором будет только 3 значащих байта, oppcode, dataHigh, dataLow
                         byte[] buf = new byte[MessageLength - 2];
@@ -108,6 +108,8 @@ namespace Canifolka_2._0
 
         protected virtual void OnMessageReceived(byte[] e)
         {
+            _autoEvent.Set();
+            _counter = 0;
             if (MessageReceived != null) MessageReceived(this, e);
         }
 
@@ -166,7 +168,10 @@ namespace Canifolka_2._0
             if (_comPortRobot.IsOpen)
             {
                 _comPortRobot.Write(MakeBuffer(oppcode, one, two), 0, MakeBuffer(oppcode, one, two).Length);
+                if (!_autoEvent.WaitOne(100)) _counter++;
+                if (_counter > 3) Program.form1._isRobotConnected = false;
             }
+            else Program.form1._isRobotConnected = false;
         }
 
         private byte[] MakeBuffer(byte oppcode, byte one, byte two)

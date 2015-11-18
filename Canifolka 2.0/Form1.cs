@@ -30,6 +30,9 @@ namespace Canifolka_2._0
         private const byte ID = 0x01;
         private const int BaudRate = 9600;
 
+        private byte Comands = DriveOppcode;
+        public bool _isRobotConnected = false;
+        private int helper = 0;
         private byte _cameraState = 0x00;
         private byte _lineSensorState = 0x00;
         private int _speedRightSide;
@@ -41,7 +44,7 @@ namespace Canifolka_2._0
             InitializeComponent();
             if (_joystick.IsConnected) checkBoxStick.Checked = true;
             else checkBoxStick.Checked = false;
-            enot = new Enotik(0x01, BaudRate);
+            enot = new Enotik(ID, BaudRate);
             _pollJoystick = new Thread(CheckStickConnectionAndPollIt){IsBackground = true};
             _pollJoystick.Start();
             _joystick.IsConnectedChanged += new EventHandler(OnIsConnectChange);
@@ -53,11 +56,15 @@ namespace Canifolka_2._0
 
         private void OnMessageReceived(object sender, byte[] e)
         {
-            // Здесь уже делаем проверку по oppcode и так далее
+            if (e[0] == DriveOppcode)
+            {
+                _isRobotConnected = true;
+            }
         }
 
         private void OnStartPressed(object sender, EventArgs e)
         {
+            Comands = CameraOppcode;
             if (_cameraState == 0x00) _cameraState = 0x01;
             else _cameraState = 0x00;
         }
@@ -114,13 +121,41 @@ namespace Canifolka_2._0
 
         private void CheckStickConnectionAndPollIt()
         {
+            Action action1 = () =>
+            {
+                checkBoxRobot.Checked = true;
+            };
+            Action action2 = () =>
+            {
+                checkBoxRobot.Checked = false;
+            };
             while (true)
             {
+                if (_isRobotConnected) Invoke(action1);
+                else
+                {
+                    if (InvokeRequired) Invoke(action2);
+                    else action2();
+                }
                 _joystick.CheckConnectionAndPolling();
                 SetSpeed();
-                enot.TransmitData(DriveOppcode, _robot.SpeedRightSideForTransmittion, _robot.SpeedLeftSideForTransmittion);
-                enot.TransmitData(CameraOppcode, _cameraState, NullByte);
-                enot.TransmitData(LineSensorOppcode, _lineSensorState, NullByte);
+                switch (Comands)
+                {
+                    case DriveOppcode:
+                        enot.TransmitData(DriveOppcode, _robot.SpeedRightSideForTransmittion,
+                            _robot.SpeedLeftSideForTransmittion);
+                        break;
+
+                    case CameraOppcode:
+                        enot.TransmitData(CameraOppcode, _cameraState, NullByte);
+                        Comands = DriveOppcode;
+                        break;
+
+                    case LineSensorOppcode:
+                        enot.TransmitData(LineSensorOppcode, _lineSensorState, NullByte);
+                        Comands = DriveOppcode;
+                        break;
+                }
                 Thread.Sleep(100);
             }
         }
@@ -179,5 +214,6 @@ namespace Canifolka_2._0
                 }
             }
         }
+
     }
 }
